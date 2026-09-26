@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+backend/.env
+backend/nyayasetu.db
+backend/uploads/
+backend/chroma_db/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+*.log
+.DS_Store
