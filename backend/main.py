@@ -20,7 +20,8 @@ async def lifespan(app: FastAPI):
     """Application startup and shutdown."""
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Demo Mode: {settings.DEMO_MODE}")
-    logger.info(f"AI Configured: {'Yes' if settings.GEMINI_API_KEY else 'No (Demo Mode Only)'}")
+    logger.info(f"AI Configured: {'Yes' if settings.is_ai_configured else 'No (Demo Mode Only)'}")
+    logger.info(f"Active LLM Provider: {settings.active_llm_provider.upper()} (Grok: {'Yes' if settings.GROK_API_KEY else 'No'}, Gemini: {'Yes' if settings.GEMINI_API_KEY else 'No'})")
 
     # Initialize database
     await init_db()
@@ -65,7 +66,12 @@ async def health_check():
         "status": "healthy",
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
-        "ai_configured": bool(settings.GEMINI_API_KEY),
+        "ai_configured": settings.is_ai_configured,
+        "llm_provider": settings.active_llm_provider,
+        "grok_configured": bool(settings.GROK_API_KEY),
+        "grok_model": settings.GROK_MODEL if settings.GROK_API_KEY else None,
+        "gemini_configured": bool(settings.GEMINI_API_KEY),
+        "gemini_model": settings.GEMINI_MODEL if settings.GEMINI_API_KEY else None,
         "demo_mode": settings.DEMO_MODE,
     }
 

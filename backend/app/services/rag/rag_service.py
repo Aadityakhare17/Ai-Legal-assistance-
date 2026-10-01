@@ -5,6 +5,7 @@ import uuid
 from typing import List, Dict, Optional
 from loguru import logger
 from app.core.config import settings
+from app.services.ai.llm_service import llm_service
 
 
 class RAGService:
@@ -28,29 +29,9 @@ class RAGService:
             raise
 
     def _get_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings from Gemini or fallback to simple hash embeddings for demo."""
-        if not settings.GEMINI_API_KEY:
-            # Demo mode: return zero vectors (won't do real semantic search)
-            logger.warning("No GEMINI_API_KEY — using placeholder embeddings")
-            return [[0.0] * 768 for _ in texts]
-
+        """Get embeddings using llm_service."""
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            embeddings = []
-            # Embed in batches of 100
-            for i in range(0, len(texts), 100):
-                batch = texts[i:i+100]
-                result = genai.embed_content(
-                    model=settings.EMBEDDING_MODEL,
-                    content=batch,
-                    task_type="retrieval_document"
-                )
-                if isinstance(batch, list):
-                    embeddings.extend(result["embedding"])
-                else:
-                    embeddings.append(result["embedding"])
-            return embeddings
+            return llm_service.get_embeddings(texts)
         except Exception as e:
             logger.error(f"Embedding error: {e}")
             return [[0.0] * 768 for _ in texts]
@@ -93,7 +74,7 @@ class RAGService:
         """Retrieve top-k relevant chunks for a query from a specific document."""
         collection = self._get_collection()
 
-        if not settings.GEMINI_API_KEY:
+        if not settings.is_ai_configured:
             # Demo: just return all chunks for that doc
             results = collection.query(
                 query_embeddings=[[0.0] * 768],

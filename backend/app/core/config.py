@@ -13,6 +13,13 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./nyayasetu.db"
 
+    # LLM Settings (Supports both Grok / xAI and Google Gemini)
+    LLM_PROVIDER: str = "auto"  # 'auto', 'grok', 'gemini'
+    
+    GROK_API_KEY: str = ""
+    GROK_MODEL: str = "grok-2-latest"
+    GROK_BASE_URL: str = "https://api.x.ai/v1"
+
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-1.5-flash"
     EMBEDDING_MODEL: str = "models/text-embedding-004"
@@ -28,6 +35,22 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,*"
     RATE_LIMIT_PER_MINUTE: int = 60
+
+    @property
+    def is_ai_configured(self) -> bool:
+        return bool(self.GROK_API_KEY or self.GEMINI_API_KEY)
+
+    @property
+    def active_llm_provider(self) -> str:
+        if self.LLM_PROVIDER.lower() == "grok" and self.GROK_API_KEY:
+            return "grok"
+        if self.LLM_PROVIDER.lower() == "gemini" and self.GEMINI_API_KEY:
+            return "gemini"
+        if self.GROK_API_KEY:
+            return "grok"
+        if self.GEMINI_API_KEY:
+            return "gemini"
+        return "demo"
 
     @property
     def cors_origins_list(self) -> List[str]:

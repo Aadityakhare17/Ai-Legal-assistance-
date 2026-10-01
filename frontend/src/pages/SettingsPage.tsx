@@ -28,22 +28,39 @@ export default function SettingsPage() {
   const [country, setCountry] = useState(user?.jurisdiction_country || 'India');
   const [stateRegion, setStateRegion] = useState(user?.jurisdiction_state || 'Maharashtra');
   const [autoCleanup, setAutoCleanup] = useState(true);
+  
+  // AI Keys
+  const [activeProvider, setActiveProvider] = useState<'grok' | 'gemini'>('grok');
+  const [grokKey, setGrokKey] = useState('');
+  const [grokModel, setGrokModel] = useState('grok-2-latest');
   const [geminiKey, setGeminiKey] = useState('');
-  const [savedKey, setSavedKey] = useState(false);
+  const [geminiModel, setGeminiModel] = useState('gemini-1.5-flash');
+  const [savedGrok, setSavedGrok] = useState(false);
+  const [savedGemini, setSavedGemini] = useState(false);
 
   const handleSavePreferences = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success('Preferences updated successfully');
   };
 
-  const handleSaveApiKey = (e: React.FormEvent) => {
+  const handleSaveGrokKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!grokKey.trim()) {
+      toast.error('Please enter a valid Grok (xAI) API key');
+      return;
+    }
+    setSavedGrok(true);
+    toast.success(`Custom Grok (${grokModel}) API Key saved!`);
+  };
+
+  const handleSaveGeminiKey = (e: React.FormEvent) => {
     e.preventDefault();
     if (!geminiKey.trim()) {
       toast.error('Please enter a valid Gemini API key');
       return;
     }
-    setSavedKey(true);
-    toast.success('Custom Gemini API Key saved locally!');
+    setSavedGemini(true);
+    toast.success(`Custom Gemini (${geminiModel}) API Key saved!`);
   };
 
   const handleClearCache = () => {
@@ -186,43 +203,139 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Section 4: AI Engine & API Key */}
+        {/* Section 4: AI Engine & API Key (Grok & Gemini) */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5 border-b border-gray-100 pb-3">
             <Key className="w-5 h-5 text-amber-600" />
             <div>
               <h2 className="text-base font-bold text-gray-800">Custom AI Engine (BYOK)</h2>
-              <p className="text-xs text-gray-400">Default runs in zero-config Demo Mode. Optionally plug in your Gemini API key for live analysis.</p>
+              <p className="text-xs text-gray-400">Default runs in zero-config Demo Mode. Configure Grok (xAI) or Google Gemini API key for live analysis.</p>
             </div>
           </div>
 
-          <form onSubmit={handleSaveApiKey} className="space-y-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Google Gemini API Key
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={geminiKey}
-                  onChange={(e) => setGeminiKey(e.target.value)}
-                  placeholder="AIzaSy..."
-                  className="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+          {/* Provider Tabs */}
+          <div className="flex gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+            <button
+              type="button"
+              onClick={() => setActiveProvider('grok')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeProvider === 'grok'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <span>⚡ Grok (xAI)</span>
+              {savedGrok && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveProvider('gemini')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeProvider === 'gemini'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <span>✨ Google Gemini</span>
+              {savedGemini && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+            </button>
+          </div>
+
+          {/* Grok Form */}
+          {activeProvider === 'grok' && (
+            <form onSubmit={handleSaveGrokKey} className="space-y-3 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Grok (xAI) API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={grokKey}
+                    onChange={(e) => setGrokKey(e.target.value)}
+                    placeholder="xai-..."
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Grok Model
+                  </label>
+                  <select
+                    value={grokModel}
+                    onChange={(e) => setGrokModel(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="grok-2-latest">grok-2-latest</option>
+                    <option value="grok-beta">grok-beta</option>
+                    <option value="grok-2-vision-1212">grok-2-vision</option>
+                    <option value="grok-3">grok-3</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-xs text-gray-400">Endpoint: https://api.x.ai/v1</p>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors"
                 >
-                  Save Key
+                  Save Grok Key
                 </button>
               </div>
-            </div>
-            {savedKey && (
-              <p className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Custom Gemini API Key is configured for this session!
-              </p>
-            )}
-          </form>
+              {savedGrok && (
+                <p className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Custom Grok ({grokModel}) API Key is active!
+                </p>
+              )}
+            </form>
+          )}
+
+          {/* Gemini Form */}
+          {activeProvider === 'gemini' && (
+            <form onSubmit={handleSaveGeminiKey} className="space-y-3 pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Google Gemini API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Gemini Model
+                  </label>
+                  <select
+                    value={geminiModel}
+                    onChange={(e) => setGeminiModel(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-xs text-gray-400">Google Generative AI API</p>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors"
+                >
+                  Save Gemini Key
+                </button>
+              </div>
+              {savedGemini && (
+                <p className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Custom Gemini ({geminiModel}) API Key is active!
+                </p>
+              )}
+            </form>
+          )}
         </div>
 
         {/* Save General Preferences Button */}

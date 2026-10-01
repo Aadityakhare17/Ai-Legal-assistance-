@@ -129,7 +129,7 @@ async def _process_document(doc_id: int, file_path: str, user_id: int):
                 chroma_ids = []
 
             # Run AI analysis
-            if settings.GEMINI_API_KEY:
+            if settings.is_ai_configured:
                 analysis_data = await analyze_document_full(text, doc.original_filename)
             else:
                 # Demo mode: use pre-computed analysis for demo documents
@@ -296,7 +296,7 @@ async def ask_document(
     demo = _get_demo_doc(doc_id)
 
     if request.mode == "general":
-        if not settings.GEMINI_API_KEY:
+        if not settings.is_ai_configured:
             answer_data = _demo_general_legal_info(request.question)
             return AskResponse(
                 answer=answer_data["answer"],
@@ -335,7 +335,7 @@ async def ask_document(
     except:
         retrieved_chunks = []
 
-    if not settings.GEMINI_API_KEY:
+    if not settings.is_ai_configured:
         # Demo mode: multi-document intelligent keyword answer from document text
         answer = _demo_answer(request.question, document_text, doc_id)
         return AskResponse(
@@ -633,8 +633,8 @@ async def compare_two_documents(
         text_b, _, _ = extract_text_from_file(doc_b.file_path)
         name_b = doc_b.original_filename
 
-    if not settings.GEMINI_API_KEY:
-        raise HTTPException(status_code=503, detail="AI comparison requires GEMINI_API_KEY to be configured. Use documents 1 and 4 for the demo comparison.")
+    if not settings.is_ai_configured:
+        raise HTTPException(status_code=503, detail="AI comparison requires GROK_API_KEY or GEMINI_API_KEY to be configured. Use documents 1 and 4 for the demo comparison.")
 
     result = await compare_documents(text_a, text_b, name_a, name_b)
     return CompareResponse(
@@ -678,7 +678,7 @@ async def create_lawyer_brief(
                 "risk_flags": analysis_obj.risk_flags,
             }
 
-    if not settings.GEMINI_API_KEY:
+    if not settings.is_ai_configured:
         # Demo brief
         brief_content = _demo_lawyer_brief(analysis_data, request.user_concern)
     else:
