@@ -1,9 +1,10 @@
-# Slim requirements for Vercel deployment (no native C/C++ heavy libs)
-# Full pipeline (PDF parsing + vector search) requires the complete requirements.txt
-# On Vercel, the app runs in Demo Mode — pre-computed documents, no file uploads.
+# Ultra-slim requirements for Vercel deployment
+# Targets well under 225 MB bundle limit.
+# App runs in Demo Mode on Vercel (pre-computed docs, no file uploads).
+# Full AI pipeline requires the complete requirements.txt (Docker/Railway).
 
 fastapi==0.111.0
-uvicorn[standard]==0.29.0
+uvicorn==0.29.0
 python-multipart==0.0.9
 pydantic==2.7.1
 pydantic-settings==2.2.1
@@ -13,15 +14,16 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.1
 httpx==0.27.0
-google-generativeai==0.7.1
-python-docx==1.1.2
 aiofiles==23.2.1
 slowapi==0.1.9
 loguru==0.7.2
 email-validator>=2.0.0
 
 # Excluded from Vercel (exceed 225 MB bundle limit):
-# chromadb==0.5.0       (~200 MB — vector store, only needed for full AI pipeline)
-# PyMuPDF==1.24.3       (~100 MB — PDF parsing, only needed for file uploads)
-# Pillow==10.3.0        (~20 MB  — image processing)
-# pytesseract==0.3.10   (~5 MB   — OCR, only needed for scanned PDFs)
+# google-generativeai==0.7.1  (~100 MB — pulls in grpcio compiled binary)
+# chromadb==0.5.0              (~200 MB — vector store, needs native C++ libs)
+# PyMuPDF==1.24.3              (~100 MB — PDF parsing, native C library)
+# Pillow==10.3.0               (~20 MB  — image processing)
+# pytesseract==0.3.10          (~5 MB   — OCR)
+# python-docx==1.1.2           (~5 MB   — DOCX parsing)
+# uvicorn[standard]            (avoids optional heavy extras)
